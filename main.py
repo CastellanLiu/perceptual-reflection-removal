@@ -277,10 +277,12 @@ if ckpt and continue_training:
     print('loaded '+ckpt.model_checkpoint_path)
     saver_restore.restore(sess,ckpt.model_checkpoint_path)
 # test doesn't need to load discriminator
-else:
+elif not is_training:
     saver_restore=tf.train.Saver([var for var in tf.trainable_variables() if 'discriminator' not in var.name])
     print('loaded '+ckpt.model_checkpoint_path)
     saver_restore.restore(sess,ckpt.model_checkpoint_path)
+else:
+    print('training from scratch')
 
 maxepoch=100
 k_sz=np.linspace(1,5,80) # for synthetic images
@@ -328,12 +330,13 @@ if is_training:
                 magic=np.random.random()
                 if magic < 0.7: # choose from synthetic dataset
                     is_syn=True
-                    syn_image1=cv2.imread(syn_image1_list[id],-1)
+                    _id=id%len(syn_image1_list)
+                    syn_image1=cv2.imread(syn_image1_list[_id],-1)
                     neww=np.random.randint(256, 480)
                     newh=round((neww/syn_image1.shape[1])*syn_image1.shape[0])
                     output_image_t=cv2.resize(np.float32(syn_image1),(neww,newh),cv2.INTER_CUBIC)/255.0
-                    output_image_r=cv2.resize(np.float32(cv2.imread(syn_image2_list[id],-1)),(neww,newh),cv2.INTER_CUBIC)/255.0
-                    file=os.path.splitext(os.path.basename(syn_image1_list[id]))[0]
+                    output_image_r=cv2.resize(np.float32(cv2.imread(syn_image2_list[_id],-1)),(neww,newh),cv2.INTER_CUBIC)/255.0
+                    file=os.path.splitext(os.path.basename(syn_image1_list[_id]))[0]
                     sigma=k_sz[np.random.randint(0, len(k_sz))]
                     if np.mean(output_image_t)*1/2 > np.mean(output_image_r):
                         continue
